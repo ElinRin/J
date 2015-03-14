@@ -1,11 +1,11 @@
-package ru.fizteh.fivt.students.elina_denisova.j_unit;
+package ru.fizteh.fivt.students.elina_denisova.j_unit.base;
 
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.strings.TableProvider;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.exception.HandlerException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,18 +15,11 @@ import java.util.Set;
 public class MyTableProvider implements TableProvider {
 
     private HashMap<String, MyTable> tables;
-    private String using;
     private File parentDirectory;
-
-    public static final int COUNT_OBJECT = 16;
-    public static final int COMMON_CONSTANT_INDEX = 100;
-    public static final String SUF_DIR = ".dir";
-    public static final String SUF_FILE = ".dat";
 
 
     public MyTableProvider(String path) {
         parentDirectory = new File(path);
-        using = null;
         tables = new HashMap<>();
 
         try {
@@ -78,6 +71,32 @@ public class MyTableProvider implements TableProvider {
         }
     }
 
+    public static void deleteDirectory(File dir) {
+        if (dir.isDirectory())
+        {
+            for (String children : dir.list())
+            {
+                File subDir = new File(dir, children);
+                deleteDirectory(subDir);
+            }
+            try {
+                Files.delete(dir.toPath());
+            } catch (IOException e) {
+                throw new IllegalArgumentException("removeTable: "
+                        + "cannon delete directory", e);
+            }
+        }
+        else
+        {
+            try {
+                Files.delete(dir.toPath());
+            } catch (IOException e) {
+                throw new IllegalArgumentException("removeTable: "
+                        + "cannon delete database file", e);
+            }
+        }
+    }
+
     @Override
     public void removeTable(String name) {
         if (name == null) {
@@ -85,54 +104,12 @@ public class MyTableProvider implements TableProvider {
                     + "Invalid name. ");
         }
         if (tables.containsKey(name)) {
-            File table = new File(parentDirectory, name);
-            for (int i = 0; i < COUNT_OBJECT; i++) {
-                File subDir = new File(table, i + SUF_DIR);
-                for (int j = 0; j < COUNT_OBJECT; j++) {
-                    String adds = Integer.toString(i * COMMON_CONSTANT_INDEX + j);
-                    if (tables.get(name).containsKey(adds)) {
-                        File dbFile = new File(subDir, j + SUF_FILE);
-                        if (dbFile.exists()) {
-                            try {
-                                Files.delete(dbFile.toPath());
-                            } catch (IOException e) {
-                                throw new RuntimeException("removeTable: "
-                                        + "cannon delete database file", e);
-                            }
-                        }
-                    }
-                }
-                if (subDir.exists()) {
-                    try {
-                        Files.delete(subDir.toPath());
-                    } catch (DirectoryNotEmptyException e) {
-                        throw new RuntimeException("removeTable: "
-                                + "cannot remove table subdirectory", e);
-                    } catch (IOException e) {
-                        throw new RuntimeException("removeTable: "
-                                + "cannot delete database subdirectory", e);
-                    }
-                }
-            }
-            try {
-                Files.delete(table.toPath());
-            } catch (DirectoryNotEmptyException e) {
-                throw new RuntimeException("removeTable: cannot remove main table directory", e);
-            } catch (IOException e) {
-                throw new RuntimeException("removeTable: cannot delete main database directory", e);
-            }
+            File dir = new File(parentDirectory, name);
+            deleteDirectory(dir);
             tables.remove(name);
         } else {
             throw new IllegalStateException("removeTable: " + name + "doesn't exist");
         }
-    }
-
-    public Table getUsing() {
-        return tables.get(using);
-    }
-
-    public void changeUsingTable(String table) {
-        using = table;
     }
 
 

@@ -1,69 +1,105 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.test;
 
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
-import ru.fizteh.fivt.students.elina_denisova.j_unit.MyTableProviderFactory;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.base.MyTableProviderFactory;
 
+import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 public class MyTableProviderTest {
+    static TableProviderFactory factory;
+    static TableProvider provider;
+
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    public TableProvider provider;
-
-    @Before
-    public void initProvider() throws IOException {
-        TableProviderFactory factory = new MyTableProviderFactory();
-        provider = factory.create(folder.newFolder("test").getAbsolutePath());
+    @BeforeClass
+    public static void beforeClass() {
+        factory = new MyTableProviderFactory();
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void getNullTable() {
+    @Before
+    public void before() throws IOException {
+        provider = factory.create(folder.newFolder("test").getCanonicalPath());
+        Assert.assertNotNull(provider);
+    }
+
+    @Test
+    public void testCreateRemoveTable() {
+        Assert.assertNotNull(provider.createTable("test_create_table"));
+        Assert.assertNull(provider.createTable("test_create_table"));
+        provider.removeTable("test_create_table");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRemoveNonExistingTable() {
+        provider.removeTable("non_existing_table");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testGetTableWithWrongName() {
+        provider.getTable(".." + File.separator + "database");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testCreateTableWithWrongName() {
+        provider.createTable(".." + File.separator + "database");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testUseTableWithWrongName() {
+        provider.removeTable(".." + File.separator + "database");
+    }
+
+    @Test
+    public void testGetTable() {
+        provider.createTable("test_get_table");
+        Assert.assertNotNull(provider.getTable("test_get_table"));
+        provider.removeTable("test_get_table");
+    }
+
+    @Test
+    public void testGetNonExistingTable() {
+        Assert.assertNull(provider.getTable("non_existing_table"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetTableWithNull() {
         provider.getTable(null);
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void createNullTable() {
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateTableWithNull() {
         provider.createTable(null);
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void removeNullTable() {
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveTableWithNull() {
         provider.removeTable(null);
     }
 
-    @Test
-    public void createAndGetTable() {
-        provider.createTable("newTable");
-        assertNull(provider.getTable("notExistingTable"));
-        assertNotNull(provider.getTable("newTable"));
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateTableWithEmptyName() {
+        provider.createTable("");
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void removeNotExistingTable() {
-        provider.removeTable("notExistingTable");
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveTableWithEmptyName() {
+        provider.removeTable("");
     }
 
-    @Test
-    public void createAndRemoveTable() {
-        assertNotNull(provider.createTable("newTable"));
-        assertNotNull(provider.getTable("newTable"));
-        provider.removeTable("newTable");
-        assertNull(provider.getTable("newTable"));
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetTableWithEmptyName() {
+        provider.getTable("");
     }
 
     @Test
-    public void doubleTableCreation() {
-        assertNotNull(provider.createTable("newTable"));
-        assertNull(provider.createTable("newTable"));
+    public void testSameInstanceGetCreate() {
+        Assert.assertEquals(provider.createTable("instance"), provider.getTable("instance"));
+        Assert.assertEquals(provider.getTable("instance"), provider.getTable("instance"));
+        provider.removeTable("instance");
     }
 }

@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.elina_denisova.j_unit;
+package ru.fizteh.fivt.students.elina_denisova.j_unit.exception;
 
 public class HandlerException {
     public static void handler(String message, Throwable cause) {

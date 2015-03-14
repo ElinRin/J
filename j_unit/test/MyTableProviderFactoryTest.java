@@ -5,7 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
-import ru.fizteh.fivt.students.elina_denisova.j_unit.MyTableProviderFactory;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.base.MyTableProviderFactory;
 
 import java.io.IOException;
 

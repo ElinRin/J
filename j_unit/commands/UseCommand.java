@@ -1,33 +1,35 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.MyTable;
-import ru.fizteh.fivt.students.elina_denisova.j_unit.MyTableProvider;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.base.MyTable;
 
 public class UseCommand extends Commands {
 
     String tableName;
 
     @Override
-    public void execute(MyTableProvider base) {
-        if (base.getUsing() != null && ((MyTable) base.getUsing()).unsavedChanges() != 0) {
-            System.out.println(((MyTable) base.getUsing()).unsavedChanges() + " unsaved changes");
+    public void execute() {
+
+
+        if (Runner.usingTable != null && ( (MyTable) base.getTable(Runner.usingTable) ).unsavedChanges() != 0) {
+            System.out.println(( (MyTable) base.getTable(Runner.usingTable) ).unsavedChanges() + " unsaved changes");
         } else {
             if (base.getTable(tableName) == null) {
                 System.out.println(tableName + " not exists");
             } else {
-                base.changeUsingTable(tableName);
+                Runner.usingTable = tableName;
                 System.out.println("using " + tableName);
             }
         }
     }
 
     @Override
-    protected int numberOfArguments() {
+    public int numberOfArguments() {
         return 1;
     }
 
     @Override
-    protected void putArguments(String[] args) {
+    public void putArguments(String[] args) {
         tableName = args[1];
     }
 }

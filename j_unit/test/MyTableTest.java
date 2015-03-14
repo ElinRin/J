@@ -1,152 +1,188 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.test;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
-import ru.fizteh.fivt.students.elina_denisova.j_unit.MyTableProviderFactory;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.base.MyTableProviderFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
-
-import static org.junit.Assert.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class MyTableTest {
+    static Table table;
+    static TableProviderFactory factory;
+    static TableProvider provider;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    public Table table;
-    public String dbDirPath;
+
+    @BeforeClass
+    public static void beforeClass() {
+        factory = new MyTableProviderFactory();
+    }
 
     @Before
-    public void initTable() throws IOException {
-        TableProviderFactory factory = new MyTableProviderFactory();
-        dbDirPath = folder.newFolder("test").getAbsolutePath();
-        TableProvider provider = factory.create(dbDirPath);
-        table = provider.createTable("table");
+    public void beforeTest() throws IOException {
+        provider = factory.create(folder.newFolder("folder").getCanonicalPath());
+        table = provider.createTable("new");
     }
+
+    @After
+    public void afterTest() {
+        provider.removeTable("new");
+    }
+
 
     @Test
     public void testGetName() {
-        assertEquals("table", table.getName());
+        Assert.assertEquals(table.getName(), "new");
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void putNull() {
-        table.put(null, null);
-    }
-
-    @Test (expected = IllegalArgumentException.class)
-    public void getNull() {
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetNull() {
         table.get(null);
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void removeNull() {
+    @Test(expected = IllegalArgumentException.class)
+    public void testPutNull() {
+        table.put(null, "test");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveNull() {
         table.remove(null);
     }
 
     @Test
-    public void testPutAndGet() {
-        assertNull(table.put("1", "2"));
-        assertEquals("2", table.get("1"));
-        assertEquals("2", table.put("1", "3"));
-        assertEquals("3", table.get("1"));
-        assertNull(table.get("a"));
+    public void testPutGetRemoveEnglish() {
+        Assert.assertNull(table.put("key", "value"));
+        Assert.assertEquals(table.get("key"), "value");
+        Assert.assertNull(table.get("value"));
+        Assert.assertEquals(table.put("key", "value_new"), "value");
+        Assert.assertEquals(table.remove("key"), "value_new");
     }
 
     @Test
-    public void testPutAndRemove() {
-        assertNull(table.put("1", "2"));
-        assertNull(table.remove("2"));
-        assertEquals("2", table.remove("1"));
-        assertNull(table.remove("1"));
-        assertNull(table.get("1"));
+    public void testPutGetRemoveRussian() {
+        Assert.assertNull(table.put("1", "2"));
+        Assert.assertEquals(table.get("1"), "2");
+        Assert.assertNull(table.get("2"));
+        Assert.assertEquals(table.put("1", "3"), "2");
+        Assert.assertEquals(table.remove("1"), "3");
     }
 
     @Test
-    public void testSize() {
-        assertEquals(0, table.size());
-        table.put("1", "2");
-        assertEquals(1, table.size());
-        table.put("3", "4");
-        assertEquals(2, table.size());
-        table.put("3", "5");
-        assertEquals(2, table.size());
-        table.remove("1");
-        assertEquals(1, table.size());
-        table.remove("1");
-        assertEquals(1, table.size());
-        table.remove("3");
-        assertEquals(0, table.size());
+    public void testSizeCommit() {
+        Assert.assertEquals(table.size(), 0);
+        int count = (Math.abs(new Random().nextInt()) % 255) + 100;
+        for (int i = 0; i < count; ++i) {
+            Assert.assertNull(table.put(Integer.toString(i), "size test"));
+        }
+        Assert.assertEquals(table.size(), count);
+        Assert.assertEquals(table.commit(), count);
+        for (int i = 0; i < count; ++i) {
+            Assert.assertEquals(table.remove(Integer.toString(i)), "size test");
+        }
+        Assert.assertEquals(table.size(), 0);
+        Assert.assertEquals(table.commit(), count);
+    }
+
+    @Test
+    public void testRollback() {
+        Assert.assertEquals(table.size(), 0);
+        int count = (Math.abs(new Random().nextInt()) % 255) + 100;
+        for (int i = 0; i < count; ++i) {
+            Assert.assertNull(table.put(Integer.toString(i), "rollback test"));
+        }
+        Assert.assertEquals(table.rollback(), count);
+    }
+
+    @Test
+    public void testRollbackWithNoChanges() {
+        Assert.assertNull(table.put("no_changes", "will_be_deleted_soon"));
+        Assert.assertEquals(table.remove("no_changes"), "will_be_deleted_soon");
+        Assert.assertEquals(table.rollback(), 0);
+
+        Assert.assertNull(table.put("key", "value"));
+        Assert.assertEquals(table.commit(), 1);
+        Assert.assertEquals(table.put("key", "value_new"), "value");
+        Assert.assertEquals(table.put("key", "value"), "value_new");
+        Assert.assertEquals(table.rollback(), 0);
+    }
+
+    @Test
+    public void testCommitWithNoChanges() {
+        Assert.assertNull(table.put("no_changes", "will_be_deleted_soon"));
+        Assert.assertEquals(table.remove("no_changes"), "will_be_deleted_soon");
+        Assert.assertEquals(table.commit(), 0);
+
+        Assert.assertNull(table.put("key", "value"));
+        Assert.assertEquals(table.commit(), 1);
+        Assert.assertEquals(table.put("key", "value_new"), "value");
+        Assert.assertEquals(table.put("key", "value"), "value_new");
+        Assert.assertEquals(table.commit(), 0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyKey() {
+        table.put("   ", "empty_key");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyValue() {
+        table.put("empty_value", "   ");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullValue() {
+        table.put("null_value", null);
+    }
+
+    @Test
+    public void testWorkWithTable() {
+        Assert.assertNull(table.put("work", "with"));
+        Assert.assertEquals(table.get("work"), "with");
+        Assert.assertEquals(table.remove("work"), "with");
+        Assert.assertEquals(table.remove("work"), null);
+        Assert.assertEquals(table.commit(), 0);
+        Assert.assertEquals(table.rollback(), 0);
+        Assert.assertEquals(table.size(), 0);
+    }
+
+    @Test
+    public void testCommitRollback() {
+        Assert.assertNull(table.put("commit", "rollback"));
+        Assert.assertEquals(table.get("commit"), "rollback");
+        Assert.assertEquals(table.rollback(), 1);
+        Assert.assertNull(table.get("commit"));
+        Assert.assertNull(table.put("commit", "rollback"));
+        Assert.assertEquals(table.get("commit"), "rollback");
+        Assert.assertEquals(table.commit(), 1);
+        Assert.assertEquals(table.remove("commit"), "rollback");
+        Assert.assertNull(table.put("commit", "rollback1"));
+        Assert.assertEquals(table.commit(), 1);
+        Assert.assertEquals(table.get("commit"), "rollback1");
     }
 
     @Test
     public void testList() {
-        assertEquals(0, table.list().size());
-        table.put("1", "2");
-        table.put("3", "4");
-        table.put("3", "5");
-        table.remove("1");
-        table.put("6", "7");
-        table.put("key", "value");
-        assertEquals(3, table.list().size());
-        assertTrue(table.list().containsAll(new LinkedList<>(Arrays.asList("3", "6", "key"))));
-    }
-
-    @Test
-    public void testRollBack() {
-        assertEquals(0, table.rollback());
-        table.put("1", "2");
-        table.put("2", "3");
-        table.put("3", "4");
-        table.remove("1");
-        table.put("1", "5");
-        assertEquals(3, table.size());
-        assertEquals(3, table.rollback());
-        assertEquals(0, table.size());
-    }
-
-    @Test
-    public void testCommit() {
-        assertEquals(0, table.commit());
-        table.put("1", "2");
-        table.put("2", "3");
-        table.put("3", "4");
-        table.remove("3");
-        assertEquals(2, table.commit());
-        assertEquals(2, table.size());
-        TableProviderFactory factory = new MyTableProviderFactory();
-        TableProvider provider = factory.create(dbDirPath);
-        Table sameTable = provider.getTable("table");
-        assertEquals(2, sameTable.size());
-    }
-
-    @Test
-    public void testCommitAndRollback() {
-        table.put("1", "2");
-        table.put("2", "3");
-        table.put("3", "4");
-        assertEquals(3, table.commit());
-        table.remove("1");
-        table.remove("2");
-        assertNull(table.get("1"));
-        assertNull(table.get("2"));
-        assertEquals(2, table.rollback());
-        assertEquals("2", table.get("1"));
-        assertEquals("3", table.get("2"));
-        table.remove("1");
-        assertEquals(1, table.commit());
-        assertEquals(2, table.size());
-        table.put("1", "2");
-        assertEquals(3, table.size());
-        assertEquals(1, table.rollback());
-        assertEquals(2, table.size());
-        assertEquals(null, table.get("1"));
+        Assert.assertEquals(table.list().size(), 0);
+        table.put("14", "88");
+        table.put("22", "8");
+        table.put("42", "42");
+        List<String> actual = table.list();
+        Set<String> expected = new HashSet<>(3);
+        expected.add("14");
+        expected.add("22");
+        expected.add("42");
+        for (String s : actual) {
+            Assert.assertTrue(expected.contains(s));
+        }
     }
 }

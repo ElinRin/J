@@ -1,12 +1,13 @@
-package ru.fizteh.fivt.students.elina_denisova.j_unit;
+package ru.fizteh.fivt.students.elina_denisova.j_unit.interpreter;
 
 import ru.fizteh.fivt.students.elina_denisova.j_unit.commands.Commands;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.exception.HandlerException;
 
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
+import java.util.HashMap;
 
 public class PackageParse {
-    public static void parse(MyTableProvider directory, String[] arg) {
+    public static void parse(HashMap<String, Commands> listCommands, String[] arg) {
         try {
             ArrayList<String> current = new ArrayList<String>();
             for (int i = 0; i < arg.length; ++i) {
@@ -23,16 +24,10 @@ public class PackageParse {
                 if (current.size() == 0) {
                     return;
                 }
-                String[] com = new String[current.size()];
-                com = current.toArray(com);
-                try {
-                    Commands command = Commands.fromString(com);
-                    command.execute(directory);
-                } catch (NoSuchElementException e) {
-                    System.err.println(e.getMessage());
-                }
+                String[] commands = new String[current.size()];
+                commands = current.toArray(commands);
+                ParseCommand.parseCommand(commands, listCommands);
             }
-            directory.getUsing().commit();
         } catch (IllegalMonitorStateException e) {
             System.out.println("Goodbye");
             System.exit(0);

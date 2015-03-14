@@ -1,15 +1,15 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.MyTableProvider;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
 
 public class DropCommand extends Commands {
     private String tableName;
 
     @Override
-    public void execute(MyTableProvider base) {
+    public void execute() {
         try {
-            if (base.getTable(tableName) == base.getUsing()) {
-                base.changeUsingTable(null);
+            if (base.getTable(tableName) == base.getTable(Runner.usingTable)) {
+                Runner.usingTable = null;
             }
             base.removeTable(tableName);
             System.out.println("dropped");
@@ -18,11 +18,11 @@ public class DropCommand extends Commands {
         }
     }
 
-    protected final void putArguments(String[] args) {
+    public final void putArguments(String[] args) {
         tableName = args[1];
     }
 
-    protected final int numberOfArguments() {
+    public final int numberOfArguments() {
         return 1;
     }
 }

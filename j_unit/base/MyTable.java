@@ -1,6 +1,7 @@
-package ru.fizteh.fivt.students.elina_denisova.j_unit;
+package ru.fizteh.fivt.students.elina_denisova.j_unit.base;
 
 import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.students.elina_denisova.j_unit.exception.HandlerException;
 
 import java.io.*;
 import java.nio.file.DirectoryNotEmptyException;
@@ -15,20 +16,22 @@ public class MyTable implements Table {
 
     private Path mainDir;
     private Map<String, Map<String, String>> databases;
-    private static Map<Integer, ArrayList<String>> changes = new HashMap<>();
+    private static ArrayList<Change> changes;
     private int numberChanges = 0;
 
-    public static final int COUNT_OBJECT = 16;
-    public static final int COMMON_CONSTANT_INDEX = 100;
-    public static final String ENCODING = "UTF-8";
-    public static final String SUF_DIR = ".dir";
-    public static final String SUF_FILE = ".dat";
+    private static final int COUNT_OBJECT = 16;
+    private static final int COMMON_CONSTANT_INDEX = 100;
+    private final String ENCODING = "UTF-8";
+    private static final String SUF_DIR = ".dir";
+    private static final String SUF_FILE = ".dat";
 
     public MyTable(File tableDir) {
-        try {
-            databases = new HashMap<>();
-            mainDir = tableDir.toPath();
 
+        databases = new HashMap<>();
+        mainDir = tableDir.toPath();
+        changes = new ArrayList<>();
+
+        try {
             for (int i = 0; i < COUNT_OBJECT; i++) {
                 File subDir = new File(tableDir, i + SUF_DIR);
                 for (int j = 0; j < COUNT_OBJECT; j++) {
@@ -43,10 +46,6 @@ public class MyTable implements Table {
         } catch (IllegalArgumentException e) {
             HandlerException.handler(e);
         }
-    }
-
-    public boolean containsKey(String adds) {
-        return databases.containsKey(adds);
     }
 
     @Override
@@ -86,15 +85,7 @@ public class MyTable implements Table {
             String oldValue = databases.get(adds).get(key);
             databases.get(adds).put(key, value);
             numberChanges++;
-            changes.put(numberChanges, new ArrayList<String>());
-            changes.get(numberChanges).add("put");
-            changes.get(numberChanges).add(key);
-            changes.get(numberChanges).add(value);
-            if (oldValue == null) {
-                changes.get(numberChanges).add("new");
-            } else {
-                changes.get(numberChanges).add(oldValue);
-            }
+            changes.add(new PutChange(key, oldValue));
             return oldValue;
         } else {
             throw new IllegalArgumentException("put: Haven't key or value. ");
@@ -111,10 +102,7 @@ public class MyTable implements Table {
                 String oldValue = databases.get(adds).get(key);
                 databases.get(adds).remove(key);
                 numberChanges++;
-                changes.put(numberChanges, new ArrayList<String>());
-                changes.get(numberChanges).add("remove");
-                changes.get(numberChanges).add(key);
-                changes.get(numberChanges).add(oldValue);
+                changes.add(new RemoveChange(key, oldValue));
                 return oldValue;
             }
         } else {
@@ -138,10 +126,8 @@ public class MyTable implements Table {
 
     @Override
     public int commit() {
-        numberChanges = 0;
-        changes = new HashMap<>();
 
-        int count = 0;
+        int count = numberChanges;
         for (int i = 0; i < COUNT_OBJECT; i++) {
             for (int j = 0; j < COUNT_OBJECT; j++) {
                 String adds = index(i, j);
@@ -168,13 +154,12 @@ public class MyTable implements Table {
                                 throw new IOException();
                             }
                         } catch (IOException | NullPointerException e) {
-                            throw new UnsupportedOperationException("ParserCommands.commandsExecution.put:"
+                            throw new UnsupportedOperationException("commit: "
                                     + " Unable to create database files in working catalog");
                         }
                     }
                     try (RandomAccessFile dbFile = new RandomAccessFile(dataBaseOld, "rw")) {
                         for (Map.Entry<String, String> current : databases.get(adds).entrySet()) {
-                            count++;
                             writeNext(dbFile, current.getKey());
                             writeNext(dbFile, current.getValue());
                         }
@@ -219,6 +204,9 @@ public class MyTable implements Table {
                 }
             }
         }
+
+        numberChanges = 0;
+        changes = new ArrayList<>();
         return count;
 
     }
@@ -272,26 +260,12 @@ public class MyTable implements Table {
 
     @Override
     public int rollback() {
-        int count = 0;
-        Map<Integer, ArrayList<String>> saveChanges = changes;
-        for (int i = saveChanges.size(); i > 0; i--) {
-            String[] com = new String[saveChanges.get(i).size()];
-            com = saveChanges.get(i).toArray(com);
-            String message;
-            if (com[0].equals("put")) {
-                if (com[3].equals("new")) {
-                    message = remove(com[1]);
-                } else {
-                    message = put(com[1], com[3]);
-                }
-            }
-            if (com[0].equals("remove")) {
-                put(com[1], com[2]);
-            }
-            count++;
+        int count = numberChanges;
+        for (int i = changes.size() - 1; i >= 0; i--) {
+            changes.get(i).execute();
         }
         numberChanges = 0;
-        changes = new HashMap<>();
+        changes = new ArrayList<>();
         return count;
     }
 

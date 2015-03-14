@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.elina_denisova.j_unit;
+package ru.fizteh.fivt.students.elina_denisova.j_unit.base;
 
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
 
