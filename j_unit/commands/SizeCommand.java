@@ -1,15 +1,18 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
-
 public class SizeCommand extends Commands {
+
+
+    public SizeCommand(CommonCommandState state) {
+        super(state);
+    }
 
     @Override
     public void execute() {
-        if (Runner.usingTable == null) {
+        if (state.usingTable == null) {
             System.out.println("no table");
         } else {
-            System.out.println(base.getTable(Runner.usingTable).size());
+            System.out.println(state.usingTable.size());
         }
     }
 

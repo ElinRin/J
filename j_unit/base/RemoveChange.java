@@ -1,18 +1,16 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.base;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
+import java.util.Map;
 
 public class RemoveChange extends Change {
-    String key, oldValue;
-
-    public RemoveChange(String key, String oldValue) {
-        this.key = key;
-        this.oldValue = oldValue;
+    public RemoveChange(String key, String oldValue,  Map<String, Map<String, String>> databases) {
+        super(key,oldValue, databases);
     }
 
     @Override
     public void execute() {
+        String adds = MyTable.pathname(key);
         if (oldValue != null)
-            Runner.base.getTable(Runner.usingTable).put(key, oldValue);
+            databases.get(adds).put(key, oldValue);
     }
 }

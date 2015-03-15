@@ -1,23 +1,27 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
 import ru.fizteh.fivt.students.elina_denisova.j_unit.base.MyTable;
 
 public class UseCommand extends Commands {
 
     String tableName;
 
+    public UseCommand(CommonCommandState state) {
+        super(state);
+    }
+
+
     @Override
     public void execute() {
 
 
-        if (Runner.usingTable != null && ( (MyTable) base.getTable(Runner.usingTable) ).unsavedChanges() != 0) {
-            System.out.println(( (MyTable) base.getTable(Runner.usingTable) ).unsavedChanges() + " unsaved changes");
+        if (state.usingTable != null && state.usingTable.unsavedChanges() != 0) {
+            System.out.println(state.usingTable.unsavedChanges() + " unsaved changes");
         } else {
-            if (base.getTable(tableName) == null) {
+            if (state.base.getTable(tableName) == null) {
                 System.out.println(tableName + " not exists");
             } else {
-                Runner.usingTable = tableName;
+                state.usingTable = (MyTable)state.base.getTable(tableName);
                 System.out.println("using " + tableName);
             }
         }

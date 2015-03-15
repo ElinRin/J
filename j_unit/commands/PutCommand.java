@@ -1,20 +1,22 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
-
 public class PutCommand extends Commands {
 
     private String key;
     private String value;
 
+    public PutCommand(CommonCommandState state) {
+        super(state);
+    }
+
 
     @Override
     public void execute(){
-        if (Runner.usingTable == null) {
+        if (state.usingTable == null) {
             System.out.println("no table");
         } else {
             String result = null;
-            result = base.getTable(Runner.usingTable).put(key, value);
+            result = state.usingTable.put(key, value);
             if (result == null) {
                 System.out.println("new");
             } else {

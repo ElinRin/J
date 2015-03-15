@@ -1,14 +1,17 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
-
 public class CommitCommand extends Commands {
+
+    public CommitCommand(CommonCommandState state) {
+        super(state);
+    }
+
     @Override
     public void execute() {
-        if (base.getTable(Runner.usingTable) == null) {
+        if (state.usingTable == null) {
             System.out.println("no table");
         } else {
-            System.out.println(base.getTable(Runner.usingTable).commit());
+            System.out.println(state.usingTable.commit());
         }
     }
 

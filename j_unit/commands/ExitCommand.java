@@ -1,15 +1,18 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
-import ru.fizteh.fivt.students.elina_denisova.j_unit.base.MyTable;
-
 public class ExitCommand extends Commands {
+
+
+    public ExitCommand(CommonCommandState state) {
+        super(state);
+    }
+
     @Override
     public void execute() {
-        if (Runner.usingTable == null || ( (MyTable) base.getTable(Runner.usingTable) ).unsavedChanges() == 0) {
+        if (state.usingTable == null || state.usingTable.unsavedChanges() == 0) {
             throw new IllegalMonitorStateException("Exit");
         } else {
-            System.err.println(((MyTable) base.getTable(Runner.usingTable) ).unsavedChanges() + "  unsaved changes");
+            System.err.println(state.usingTable.unsavedChanges() + "  unsaved changes");
         }
     }
 

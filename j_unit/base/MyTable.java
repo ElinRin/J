@@ -53,14 +53,14 @@ public class MyTable implements Table {
         return mainDir.toString();
     };
 
-    private String pathname(String key) {
+    protected static String pathname(String key) {
         int hashCode = Math.abs(key.hashCode());
         int dir = hashCode % COUNT_OBJECT;
         int file = hashCode / COUNT_OBJECT % COUNT_OBJECT;
         return index(dir, file);
     }
 
-    private String index(int i, int j) {
+    private static String index(int i, int j) {
         return  Integer.toString(i * COMMON_CONSTANT_INDEX + j);
     }
 
@@ -85,7 +85,7 @@ public class MyTable implements Table {
             String oldValue = databases.get(adds).get(key);
             databases.get(adds).put(key, value);
             numberChanges++;
-            changes.add(new PutChange(key, oldValue));
+            changes.add(new PutChange(key, oldValue, databases));
             return oldValue;
         } else {
             throw new IllegalArgumentException("put: Haven't key or value. ");
@@ -102,7 +102,7 @@ public class MyTable implements Table {
                 String oldValue = databases.get(adds).get(key);
                 databases.get(adds).remove(key);
                 numberChanges++;
-                changes.add(new RemoveChange(key, oldValue));
+                changes.add(new RemoveChange(key, oldValue, databases));
                 return oldValue;
             }
         } else {

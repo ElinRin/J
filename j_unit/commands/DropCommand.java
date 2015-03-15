@@ -1,17 +1,20 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
-
 public class DropCommand extends Commands {
     private String tableName;
+
+    public DropCommand(CommonCommandState state) {
+        super(state);
+    }
+
 
     @Override
     public void execute() {
         try {
-            if (base.getTable(tableName) == base.getTable(Runner.usingTable)) {
-                Runner.usingTable = null;
+            if (state.base.getTable(tableName) == state.usingTable) {
+               state.usingTable = null;
             }
-            base.removeTable(tableName);
+            state.base.removeTable(tableName);
             System.out.println("dropped");
         } catch (IllegalStateException e) {
             System.out.println(tableName + " not exists");

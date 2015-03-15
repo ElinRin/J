@@ -1,18 +1,19 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.commands;
 
-import ru.fizteh.fivt.students.elina_denisova.j_unit.Runner;
-
 public class RemoveCommand extends Commands {
 
     private String key;
 
+    public RemoveCommand(CommonCommandState state) {
+        super(state);
+    }
 
     @Override
     public void execute() {
-        if (Runner.usingTable == null) {
+        if (state.usingTable == null) {
             System.out.println("no table");
         } else {
-            String result = base.getTable(Runner.usingTable).remove(key);
+            String result = state.usingTable.remove(key);
             if (result != null) {
                 System.out.println("removed");
             } else {
