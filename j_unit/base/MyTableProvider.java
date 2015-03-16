@@ -49,6 +49,7 @@ public class MyTableProvider implements TableProvider {
 
     @Override
     public Table getTable(String name) {
+        if (name == null) throw new IllegalArgumentException();
         return tables.get(name);
     }
 

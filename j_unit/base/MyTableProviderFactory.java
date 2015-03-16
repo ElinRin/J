@@ -7,8 +7,7 @@ public class MyTableProviderFactory implements TableProviderFactory {
     @Override
     public MyTableProvider create(String dir) {
         if (dir == null) {
-            throw new IllegalArgumentException("create: " + dir
-            + " isn't a directory. ");
+            throw new IllegalArgumentException();
         }
         return new MyTableProvider(dir);
     }

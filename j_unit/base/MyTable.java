@@ -1,23 +1,18 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.base;
 
 import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.students.elina_denisova.j_unit.exception.HandlerException;
 
 import java.io.*;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MyTable implements Table {
 
     private Path mainDir;
     private Map<String, Map<String, String>> databases;
     private static ArrayList<Change> changes;
-    private int numberChanges = 0;
 
     private static final int COUNT_OBJECT = 16;
     private static final int COMMON_CONSTANT_INDEX = 100;
@@ -31,27 +26,24 @@ public class MyTable implements Table {
         mainDir = tableDir.toPath();
         changes = new ArrayList<>();
 
-        try {
-            for (int i = 0; i < COUNT_OBJECT; i++) {
-                File subDir = new File(tableDir, i + SUF_DIR);
-                for (int j = 0; j < COUNT_OBJECT; j++) {
-                    File dbFile = new File(subDir, j + SUF_FILE);
-                    if (dbFile.exists()) {
-                        String adds = index(i, j);
-                        databases.put(adds, new HashMap<String, String>());
-                        readFromFile(dbFile, databases.get(adds));
-                    }
+        for (int i = 0; i < COUNT_OBJECT; i++) {
+            File subDir = new File(tableDir, i + SUF_DIR);
+            for (int j = 0; j < COUNT_OBJECT; j++) {
+                File dbFile = new File(subDir, j + SUF_FILE);
+                if (dbFile.exists()) {
+                    String adds = index(i, j);
+                    databases.put(adds, new HashMap<String, String>());
+                    readFromFile(dbFile, databases.get(adds));
                 }
             }
-        } catch (IllegalArgumentException e) {
-            HandlerException.handler(e);
         }
     }
+
 
     @Override
     public String getName() {
         return mainDir.toString();
-    };
+    }
 
     protected static String pathname(String key) {
         int hashCode = Math.abs(key.hashCode());
@@ -76,7 +68,7 @@ public class MyTable implements Table {
 
     @Override
     public String put(String key, String value) {
-        if ((key != null) || (value != null)) {
+        if ((key != null) && (value != null)) {
             String adds = pathname(key);
             if (!databases.containsKey(adds)) {
                 databases.put(adds, new HashMap<String, String>());
@@ -84,7 +76,6 @@ public class MyTable implements Table {
 
             String oldValue = databases.get(adds).get(key);
             databases.get(adds).put(key, value);
-            numberChanges++;
             changes.add(new PutChange(key, oldValue, databases));
             return oldValue;
         } else {
@@ -101,7 +92,6 @@ public class MyTable implements Table {
             } else {
                 String oldValue = databases.get(adds).get(key);
                 databases.get(adds).remove(key);
-                numberChanges++;
                 changes.add(new RemoveChange(key, oldValue, databases));
                 return oldValue;
             }
@@ -127,7 +117,7 @@ public class MyTable implements Table {
     @Override
     public int commit() {
 
-        int count = numberChanges;
+        int count = changes.size();
         for (int i = 0; i < COUNT_OBJECT; i++) {
             for (int j = 0; j < COUNT_OBJECT; j++) {
                 String adds = index(i, j);
@@ -205,8 +195,7 @@ public class MyTable implements Table {
             }
         }
 
-        numberChanges = 0;
-        changes = new ArrayList<>();
+        changes.clear();
         return count;
 
     }
@@ -260,12 +249,12 @@ public class MyTable implements Table {
 
     @Override
     public int rollback() {
-        int count = numberChanges;
-        for (int i = changes.size() - 1; i >= 0; i--) {
-            changes.get(i).execute();
+        int count = changes.size();
+        Collections.reverse(changes);
+        for (Change com : changes) {
+            com.execute();
         }
-        numberChanges = 0;
-        changes = new ArrayList<>();
+        changes.clear();
         return count;
     }
 
@@ -285,6 +274,6 @@ public class MyTable implements Table {
     }
 
     public int unsavedChanges() {
-        return numberChanges;
+        return changes.size();
     }
 }

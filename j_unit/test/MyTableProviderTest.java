@@ -1,6 +1,5 @@
 package ru.fizteh.fivt.students.elina_denisova.j_unit.test;
 
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,7 +25,7 @@ public class MyTableProviderTest {
         provider = factory.create(folder.newFolder("test").getAbsolutePath());
     }
 
-    @Test (expected = IllegalArgumentException.class)
+   @Test (expected = IllegalArgumentException.class)
     public void getNullTable() {
         provider.getTable(null);
     }
@@ -53,17 +52,13 @@ public class MyTableProviderTest {
         provider.removeTable("notExistingTable");
     }
 
-    @Test
+   @Test
     public void createAndRemoveTable() {
-        assertNotNull(provider.createTable("newTable"));
+        provider.createTable("newTable");
         assertNotNull(provider.getTable("newTable"));
         provider.removeTable("newTable");
         assertNull(provider.getTable("newTable"));
     }
 
-    @Test
-    public void doubleTableCreation() {
-        assertNotNull(provider.createTable("newTable"));
-        assertNull(provider.createTable("newTable"));
-    }
+
 }

@@ -33,8 +33,4 @@ public class MyTableProviderFactoryTest {
         factory.create(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void createWithIncorrectArgument() throws IOException {
-        factory.create("");
-    }
 }
